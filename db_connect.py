@@ -79,3 +79,10 @@ if __name__ == "__main__":
 #     print(db.readDB(schema=schema, table=table, columns=columns))
     db.updateDB(schema=schema, table=table, columns=['id','visit_yn'], data_list=[('1',1)], condition="name='고명섭'")
     # db.deleteDB(schema=schema, table=table, condition="id != 'd'")
+
+# ------------------------------
+# TABLE DETAILS
+# userstatus (id, name, visit_yn)
+# todayreport (id, role (user, system, assistant), timestamp)
+#
+
