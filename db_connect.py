@@ -65,20 +65,20 @@ class CRUD(Databases):
         except Exception as e:
             print("delete DB err", e)
 
-
-if __name__ == "__main__":
-    db = CRUD()
-    schema = 'public'
-    table = 'userstatus'
-#     columns = ['id','name','visit_yn']
-#     data_list = [
-#     ("1", "고명섭", 0),
-#     ("2", "곽재혁", 1),
-# ]
-#     db.insertDB(schema=schema, table=table, columns=columns, data_list=data_list)
-#     print(db.readDB(schema=schema, table=table, columns=columns))
-    db.updateDB(schema=schema, table=table, columns=['id','visit_yn'], data_list=[('1',1)], condition="name='고명섭'")
-    # db.deleteDB(schema=schema, table=table, condition="id != 'd'")
+#
+# if __name__ == "__main__":
+#     db = CRUD()
+#     schema = 'public'
+#     table = 'userstatus'
+# #     columns = ['id','name','visit_yn']
+# #     data_list = [
+# #     ("1", "고명섭", 0),
+# #     ("2", "곽재혁", 1),
+# # ]
+# #     db.insertDB(schema=schema, table=table, columns=columns, data_list=data_list)
+# #     print(db.readDB(schema=schema, table=table, columns=columns))
+#     db.updateDB(schema=schema, table=table, columns=['id','visit_yn'], data_list=[('1',1)], condition="name='고명섭'")
+#     # db.deleteDB(schema=schema, table=table, condition="id != 'd'")
 
 # ------------------------------
 # TABLE DETAILS
