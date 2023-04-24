@@ -6,13 +6,11 @@ import requests
 import time
 # import db_connect
 import psycopg2
-
+from converter import Converter
 ## 업무목표 주간보고 >> 월간 >> 반기보고
-# 1. db를 선택하고 그걸 여기에 연결
-# 2. method  >> db schema  id, name, 방문여부(0,1), 그간 대화내역 (system으로 입력한거, 유저로 입력한),일일보고 (dic.toString), 주간보고, 월간보고 , 분기보고
-# 2-1. db를 다루는 sql 작성  당장 필요한 sql name으로 일일보고 가져오기 , name으로 방문 여부 체크 (True or False), db에 저장하는거
-# 3. (주간보고 트리거) ai한테 일일보고를 하다가 특정갯수이상 (5이상 쌓이면) 사용자한테 "주간보고서를 만들까요?" >> "yes or no"
-# (2번째 트리거) 수동모드 ai한테 주간보고를 만들어줘(갯수 x) >> "making report"
+## 1. 받은 이름을 바탕으로 데이터베이스에 일일보고 내용 저장
+## 2. 생성된 주간보고서 내용을 이름을 기준으로 db에 저장
+## 스키마 테이블
 
 
 ## 전역으로 설정
@@ -32,7 +30,9 @@ instruction_message_list_today = [
 ]
 
 instruction_message_list_weekly = [
-    "사용자가 입력한 내용을 주간보고로 편집할 것입니다. 보고서 제목은 주간보고서로 정합니다.",
+    "사용자가 입력한 내용을 주간보고로 편집할 것입니다.",
+    "입력받은 내용에서 일자를 확인하여 올해의 월과 몇 주차인지를 파악합니다."
+    "확인한 월과 주차를 바탕으로 보고서 제목은 확인된 월 주차 보고서로 정합니다.",
     "입력받은 내용을 일자별로 분리합니다. 이때 없는 일자에 대한 내용은 생성하지 않습니다. 또한 추후 계획이란 말이 들어있다면 따로 저장해놓습니다.",
     "일자별로 분리한 내용을 보고내용 항목에 넣습니다.",
     "추후계획으로 저장해 놓은 내용을 추후계획이란 항목을 생성하여 입력합니다.",
@@ -40,8 +40,8 @@ instruction_message_list_weekly = [
 ]
 
 ## 현재 유저, 현재 모드를 전역으로 설정
-currentUser = ''
 mode = 0
+# 이름
 user = ''
 
 
@@ -55,9 +55,9 @@ user = ''
 ## 현재 모드는 크게 3가지 0은 일일보고 1은 주간보고 2는 월간보고
 def saveId(name):
     global user
-    global mode
     user = name
-    mode = 4
+
+
 
 
 def get_environment(input_message):
@@ -122,22 +122,34 @@ def predict_demo(user_input, state):
     global mode
 
     if mode == 2:
-
+        ## ai한테 물어본 결과거든?
         response = process_scenario()
         state = state + [(user_input, None)]
+        ## user별 주간보고 저장
         response_items = response.split('\n\n')
-        print("res", response_items)
+        cv = Converter(response_items[0], response_items[1:-1], response_items[-1])
+        cv.setting()
         for item in response_items:
             state = state + [(None, item)]
+
+
+    ## mode가 0이면 처음설명
     elif mode == 0:
+        saveId(user_input)
         state = state + [(user_input, None)]
         state = state + [(None, "입력완료")]
+
+
+    ## 1번모드가 일일보고하는 모드야
     elif mode == 1:
         ## 처음 버튼을 눌렀을 때만 작동하도록
 
         state += [(user_input, None)]
+
         state += [(None, instruction_message_list_today[2])]
+        ## 나중에 지우고
         dataForUser.append(user_input)
+        ## 여기다가 이름별로 일일보고 저장
     print("chat state", state, user_input)
     ## state는 지금까지 대화 내용을 저장하는것
     # print(state)
@@ -150,6 +162,7 @@ def demo_load(user_input, chat_state):
     # print(type(chat_state))
     chat_state += [(None, instruction_message_list_system[0])]
     chat_state += [(None, instruction_message_list_system[1])]
+
     # chat_state += [(user_input, None)]
     # chat_state, _ = predict_demo("", chat_state)
 
@@ -184,10 +197,7 @@ def choiceMode2(chat_state):
 
 
 
-def init_db():
-    db = Databases()
-    crud = CRUD(db)
-    return crud
+
 
 
 #
@@ -231,7 +241,7 @@ def demo_start(func):
                               outputs=[chatbot, chat_state])
 
             user_input.submit(lambda: "", None, user_input)
-        demo.launch()
+        demo.launch(share= True)
 
     except Exception as e:
         print("errror", e)
