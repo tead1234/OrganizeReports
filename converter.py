@@ -1,3 +1,5 @@
+from io import BytesIO
+import os
 from docx import Document
 
 
@@ -10,10 +12,13 @@ class Converter():
         self.future = future
 
     def setting(self):
+        desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
         doc = Document()
         doc.add_heading(self.title, level=0)
         doc.add_heading('보고 내용', level=1)
-        doc.add_paragraph(self.content)
+        for conten in self.content:
+            doc.add_paragraph(conten)
         doc.add_heading('추후 계획', level=1)
         doc.add_paragraph(self.future)
-        doc.save("{}.docx".format(self.title))
+        filename = os.path.join(desktop_path, f"{self.title}.docx")
+        doc.save(filename)

@@ -7,6 +7,7 @@ import time
 # import db_connect
 import psycopg2
 from converter import Converter
+
 ## 업무목표 주간보고 >> 월간 >> 반기보고
 ## 1. 받은 이름을 바탕으로 데이터베이스에 일일보고 내용 저장
 ## 2. 생성된 주간보고서 내용을 이름을 기준으로 db에 저장
@@ -44,6 +45,9 @@ mode = 0
 # 이름
 user = ''
 
+title = ''
+content = ''
+future = ''
 
 # db = Databases()
 # crud = CRUD(db)
@@ -56,8 +60,6 @@ user = ''
 def saveId(name):
     global user
     user = name
-
-
 
 
 def get_environment(input_message):
@@ -84,7 +86,7 @@ def get_environment(input_message):
 visit = False
 data = []
 dataForUser = []
-first = True
+file = bytes()
 
 
 def process_scenario():
@@ -117,9 +119,12 @@ def process_scenario():
     return assistant_message
 
 
+
+
+
 #
 def predict_demo(user_input, state):
-    global mode
+    global mode, file
 
     if mode == 2:
         ## ai한테 물어본 결과거든?
@@ -127,7 +132,8 @@ def predict_demo(user_input, state):
         state = state + [(user_input, None)]
         ## user별 주간보고 저장
         response_items = response.split('\n\n')
-        cv = Converter(response_items[0], response_items[1:-1], response_items[-1])
+
+        cv = Converter(response_items[0], response_items[1: -1], response_items[-1])
         cv.setting()
         for item in response_items:
             state = state + [(None, item)]
@@ -189,18 +195,13 @@ def choiceMode2(chat_state):
 
     chat_state += [(None, "주간보고서 모드입니다.")]
     chat_state, _ = predict_demo("", chat_state)
+    chat_state += [(None, "주간보고서를 바탕화면에 저장하였습니다.")]
     ## 여기서 워드파일로 바꿔주는 부분이 필요함
-
 
     return chat_state, chat_state
 
 
 
-
-
-
-
-#
 #
 #
 def demo_start(func):
@@ -215,7 +216,7 @@ def demo_start(func):
             # user = gr.State([])
             ## 여기가 사람들한테 보여지는 내용
             chatbot = gr.Chatbot()
-
+##
             chat_state = gr.State([])
 
             with gr.Row():
@@ -230,6 +231,7 @@ def demo_start(func):
             # print(mode)
             with gr.Row():
                 user_input = gr.Textbox(show_label=False, placeholder="메시지를 입력한 후 엔터를 눌려주세요.").style(container=False)
+
             ## load에서 inputs = componet 중 무엇을 사용할 것인지, output은 무엇을 뱉어낼 것인지
             demo.load(demo_load,
                       inputs=[user_input, chat_state],
@@ -241,7 +243,7 @@ def demo_start(func):
                               outputs=[chatbot, chat_state])
 
             user_input.submit(lambda: "", None, user_input)
-        demo.launch(share= True)
+        demo.launch(share=True)
 
     except Exception as e:
         print("errror", e)
